@@ -31,8 +31,8 @@ type interceptor struct {
 	logger            *zap.Logger
 	cache             redis.Repo
 	db                mysql.Repo
-	authorizedService authorized.Service
-	adminService      admin.Service
+	authorizedService authorized.Service // 认证授权服务
+	adminService      admin.Service      // 管理员服务
 }
 
 func New(logger *zap.Logger, cache redis.Repo, db mysql.Repo) Interceptor {

@@ -2,6 +2,7 @@ package socket
 
 import "go.uber.org/zap"
 
+// 接收从客户端发送的消息
 func (s *server) OnMessage() {
 	defer func() {
 		s.OnClose()

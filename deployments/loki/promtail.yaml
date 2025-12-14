@@ -8,7 +8,7 @@ positions:
 
 # Loki服务器的地址
 clients:
-  - url: http://127.0.0.1:3100/loki/api/v1/push
+  - url: http://gin-api-loki:3100/loki/api/v1/push
 
 scrape_configs:
   - job_name: go-gin-api

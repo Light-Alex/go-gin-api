@@ -201,6 +201,7 @@ func (r *router) HEAD(relativePath string, handlers ...HandlerFunc) {
 	r.group.HEAD(relativePath, wrapHandlers(handlers...)...)
 }
 
+// wrapHandlers 包装 gin.HandlerFunc
 func wrapHandlers(handlers ...HandlerFunc) []gin.HandlerFunc {
 	funcs := make([]gin.HandlerFunc, len(handlers))
 	for i, handler := range handlers {
@@ -220,8 +221,8 @@ var _ Mux = (*mux)(nil)
 
 // Mux http mux
 type Mux interface {
-	http.Handler
-	Group(relativePath string, handlers ...HandlerFunc) RouterGroup
+	http.Handler                                                    // 实现 http.Handler 接口
+	Group(relativePath string, handlers ...HandlerFunc) RouterGroup // 创建路由组
 }
 
 type mux struct {
@@ -250,7 +251,9 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 
 	fmt.Println(color.Blue(_UI))
 
+	// 静态文件
 	mux.engine.StaticFS("assets", http.FS(assets.Bootstrap))
+	// 模板文件
 	mux.engine.SetHTMLTemplate(template.Must(template.New("").ParseFS(assets.Templates, "templates/**/*")))
 
 	// withoutTracePaths 这些请求，默认不记录日志
@@ -279,25 +282,30 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		f(opt)
 	}
 
+	// 注册pprof
 	if !opt.disablePProf {
 		if !env.Active().IsPro() {
 			pprof.Register(mux.engine) // register pprof to gin
 		}
 	}
 
+	// 注册swagger
 	if !opt.disableSwagger {
 		if !env.Active().IsPro() {
 			mux.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // register swagger
 		}
 	}
 
+	// 注册prometheus
 	if !opt.disablePrometheus {
 		mux.engine.GET("/metrics", gin.WrapH(promhttp.Handler())) // register prometheus
 	}
 
+	// 注册CORS
 	if opt.enableCors {
 		mux.engine.Use(cors.New(cors.Options{
 			AllowedOrigins: []string{"*"},
+			// AllowedOrigins: []string{"http://192.168.140.128:9999/*"},
 			AllowedMethods: []string{
 				http.MethodHead,
 				http.MethodGet,
@@ -312,11 +320,14 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		}))
 	}
 
+	// 服务启动后开启首页
 	if opt.enableOpenBrowser != "" {
 		_ = browser.Open(opt.enableOpenBrowser)
 	}
 
 	// recover两次，防止处理时发生panic，尤其是在OnPanicNotify中。
+	// 定位：基础安全网
+	// 作用：在最外层捕获任何可能发生的panic，防止服务崩溃
 	mux.engine.Use(func(ctx *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -327,6 +338,18 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		ctx.Next()
 	})
 
+	// 执行顺序：
+	// // 1. 请求进入，记录开始时间
+	// ts := time.Now()
+
+	// // 2. 执行后续所有中间件和路由处理器
+	// ctx.Next()  // 阻塞等待所有处理完成
+
+	// // 3. 所有处理完成后，执行 defer 函数
+	// defer func() {
+	// 	cost := time.Since(ts).Seconds()  // 计算从进入到现在的时间差
+	// 	logger.Info(...)  // 记录完整耗时
+	// }()
 	mux.engine.Use(func(ctx *gin.Context) {
 
 		if ctx.Writer.Status() == http.StatusNotFound {
@@ -366,6 +389,8 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 			}
 
 			// region 发生 Panic 异常发送告警提醒
+			// 定位：完整的业务错误处理
+			// 作用：在请求处理的核心逻辑中捕获panic；返回标准的HTTP 500错误响应；发送告警通知给相关人员
 			if err := recover(); err != nil {
 				stackInfo := string(debug.Stack())
 				logger.Error("got panic", zap.String("panic", fmt.Sprintf("%+v", err)), zap.String("stack", stackInfo))
@@ -464,6 +489,7 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 				return
 			}
 
+			// 获取访问路径
 			decodedURL, _ := url.QueryUnescape(ctx.Request.URL.RequestURI())
 
 			// ctx.Request.Header，精简 Header 参数
@@ -523,6 +549,7 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		ctx.Next()
 	})
 
+	// 注册限流，默认：1s 内最多10000个请求（令牌桶算法）
 	if opt.enableRate {
 		limiter := rate.NewLimiter(rate.Every(time.Second*1), configs.MaxRequestsPerSecond)
 		mux.engine.Use(func(ctx *gin.Context) {

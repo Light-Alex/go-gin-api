@@ -16,7 +16,7 @@ type signRequest struct {
 	Key    string `form:"key" binding:"required"`    // 调用方 KEY
 	Path   string `form:"path" binding:"required"`   // 请求路径 (不附带 querystring)，例如：/api/login
 	Method string `form:"method" binding:"required"` // 请求方式，例如：POST
-	Params string `form:"params" binding:"required"` // 请求参数，例如：username=tom&password=123456
+	Params string `form:"params"`                    // 请求参数，例如：username=tom&password=123456
 }
 
 type signResponse struct {

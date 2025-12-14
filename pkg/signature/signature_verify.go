@@ -48,6 +48,15 @@ func (s *signature) Verify(authorization, date string, path string, method strin
 	}
 
 	// Encode() 方法中自带 sorted by key
+	// params.Encode()：
+	// params := url.Values{
+	// 	"z": []string{"3"},
+	// 	"a": []string{"1"},
+	// 	"b": []string{"2"},
+	// }
+	// params.Encode() 返回 "a=1&b=2&z=3"（按字母顺序排序）
+
+	// QueryUnescape: 将编码后的查询字符串解码回原始格式,去除 URL 编码的特殊字符（如 %20 → 空格）; 如 "name=John%20Doe&age=30" -> "name=John Doe&age=30"
 	sortParamsEncode, err := url.QueryUnescape(params.Encode())
 	if err != nil {
 		err = errors.Errorf("url QueryUnescape error %v", err)

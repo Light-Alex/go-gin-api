@@ -23,11 +23,11 @@ const (
 type Option func(*option)
 
 type option struct {
-	level          zapcore.Level
-	fields         map[string]string
-	file           io.Writer
-	timeLayout     string
-	disableConsole bool
+	level          zapcore.Level     // 日志级别
+	fields         map[string]string // 日志字段
+	file           io.Writer         // 日志输出目标
+	timeLayout     string            // 时间格式
+	disableConsole bool              // 是否禁用控制台输出
 }
 
 // WithDebugLevel only greater than 'level' will output
@@ -161,6 +161,7 @@ func NewJSONLogger(opts ...Option) (*zap.Logger, error) {
 
 	core := zapcore.NewTee()
 
+	// 控制台日志
 	if !opt.disableConsole {
 		core = zapcore.NewTee(
 			zapcore.NewCore(jsonEncoder,
@@ -174,6 +175,7 @@ func NewJSONLogger(opts ...Option) (*zap.Logger, error) {
 		)
 	}
 
+	// 文件日志
 	if opt.file != nil {
 		core = zapcore.NewTee(core,
 			zapcore.NewCore(jsonEncoder,

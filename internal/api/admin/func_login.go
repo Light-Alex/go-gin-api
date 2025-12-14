@@ -48,11 +48,13 @@ func (h *handler) Login() core.HandlerFunc {
 			return
 		}
 
+		// 构建查询条件
 		searchOneData := new(admin.SearchOneData)
 		searchOneData.Username = req.Username
 		searchOneData.Password = password.GeneratePassword(req.Password)
 		searchOneData.IsUsed = 1
 
+		// 查询用户信息
 		info, err := h.adminService.Detail(c, searchOneData)
 		if err != nil {
 			c.AbortWithError(core.Error(
@@ -72,6 +74,7 @@ func (h *handler) Login() core.HandlerFunc {
 			return
 		}
 
+		// 生成token
 		token := password.GenerateLoginToken(info.Id)
 
 		// 用户信息

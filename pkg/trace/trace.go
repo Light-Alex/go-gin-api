@@ -59,6 +59,7 @@ func New(id string) *Trace {
 	if id == "" {
 		buf := make([]byte, 10)
 		io.ReadFull(rand.Reader, buf)
+		// 生成16进制字符串
 		id = hex.EncodeToString(buf)
 	}
 

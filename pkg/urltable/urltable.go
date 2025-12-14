@@ -19,24 +19,32 @@ const (
 func parse(pattern string) ([]string, error) {
 	const format = "[get, post, put, patch, delete, view]/{a-Z}+/{*}+/{**}"
 
+	// 去除首尾空格和开头的/
 	if pattern = strings.TrimLeft(strings.TrimSpace(pattern), delimiter); pattern == "" {
 		return nil, errors.Errorf("pattern illegal, should in format of %s", format)
 	}
 
+	// 按 / 分割路径
+	// 至少需要 2 个部分（方法 + 至少一个路径段）
 	paths := strings.Split(pattern, delimiter)
 	if len(paths) < 2 {
 		return nil, errors.Errorf("pattern illegal, should in format of %s", format)
 	}
 
+	// 去除每个路径段的首尾空格
 	for i := range paths {
 		paths[i] = strings.TrimSpace(paths[i])
 	}
 
+	// 防止无效的通配符用法
 	// likes get/ get/* get/**
 	if len(paths) == 2 && (paths[1] == empty || paths[1] == fuzzy || paths[1] == omitted) {
 		return nil, errors.New("illegal wildcard")
 	}
 
+	// 将方法名转为大写
+	// 验证是否为支持的 HTTP 方法
+	// 支持自定义的 VIEW 方法
 	switch paths[0] = strings.ToUpper(paths[0]); paths[0] {
 	case http.MethodGet,
 		http.MethodPost,
@@ -49,6 +57,8 @@ func parse(pattern string) ([]string, error) {
 			http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, methodView)
 	}
 
+	// 空路径验证：防止中间出现空路径段（如 GET/api//user）
+	// 省略符位置验证：** 必须是最后一个路径段
 	for k := 1; k < len(paths); k++ {
 		if paths[k] == empty && k+1 != len(paths) {
 			return nil, errors.New("pattern contains illegal empty path")
@@ -59,6 +69,7 @@ func parse(pattern string) ([]string, error) {
 		}
 	}
 
+	// 返回解析后的路径段数组，如 ["GET", "api", "v1", "user"]
 	return paths, nil
 }
 
@@ -72,6 +83,17 @@ func Format(pattern string) (string, error) {
 	return strings.Join(paths, delimiter), nil
 }
 
+// 前缀树
+/* 根节点 (section)
+├── "api" (section)
+│   ├── "v1" (section)
+│   │   ├── "user" (section, leaf=true)  # GET/api/v1/user
+│   │   └── "order" (section, leaf=true) # GET/api/v1/order
+│   └── "v2" (section)
+│       └── "user" (section, leaf=true)  # GET/api/v2/user
+├── "*" (section, leaf=true)             # GET/* (单段通配符,如/api/"*"/info)
+└── "**" (section, leaf=true)            # GET/** (多段省略符，如/api/"**")
+*/
 type section struct {
 	leaf    bool
 	mapping map[string]*section
@@ -98,6 +120,11 @@ func (t *Table) Size() int {
 }
 
 // Append pattern
+// // 插入路由模式
+// table.Append("GET/api/v1/user")     // leaf=true 在 "user" 节点
+// table.Append("GET/api/v1/order")    // leaf=true 在 "order" 节点
+// table.Append("GET/api/*/info")      // leaf=true 在 "*" 节点
+// table.Append("GET/api/**")          // leaf=true 在 "**" 节点
 func (t *Table) Append(pattern string) error {
 	paths, err := parse(pattern)
 	if err != nil {
@@ -131,6 +158,10 @@ func (t *Table) Append(pattern string) error {
 }
 
 // Mapping url to pattern
+// // 查询匹配
+// pattern, _ := table.Mapping("/api/v1/user")     // 返回 "GET/api/v1/user"
+// pattern, _ := table.Mapping("/api/v2/info")     // 返回 "GET/api/*/info"
+// pattern, _ := table.Mapping("/api/v1/user/info") // 返回 "GET/api/**"
 func (t *Table) Mapping(url string) (string, error) {
 	paths, err := parse(url)
 	if err != nil {

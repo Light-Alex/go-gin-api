@@ -1,6 +1,7 @@
 package authorized
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
@@ -37,6 +38,15 @@ func (h *handler) UpdateUsed() core.HandlerFunc {
 				http.StatusBadRequest,
 				code.ParamBindError,
 				code.Text(code.ParamBindError)).WithError(err),
+			)
+			return
+		}
+
+		if req.Used != 1 && req.Used != -1 {
+			c.AbortWithError(core.Error(
+				http.StatusBadRequest,
+				code.ParamBindError,
+				code.Text(code.ParamBindError)).WithError(errors.New("used must be 1 or -1")),
 			)
 			return
 		}

@@ -35,9 +35,13 @@ import (
 func main() {
 	// 初始化 access logger
 	accessLogger, err := logger.NewJSONLogger(
+		// 禁用控制台输出
 		logger.WithDisableConsole(),
+		// 添加自定义字段 "domain"，格式为 "项目名[环境]"，例如：go-gin-api[fat]，便于区分不同环境和项目的日志
 		logger.WithField("domain", fmt.Sprintf("%s[%s]", configs.ProjectName, env.Active().Value())),
+		// 设置时间格式为 "2006-01-02 15:04:05"
 		logger.WithTimeLayout(timeutil.CSTLayout),
+		// 日志输出到文件 configs.ProjectAccessLogFile
 		logger.WithFileP(configs.ProjectAccessLogFile),
 	)
 	if err != nil {
@@ -56,6 +60,7 @@ func main() {
 		panic(err)
 	}
 
+	// 确保日志在程序退出时被刷新
 	defer func() {
 		_ = accessLogger.Sync()
 		_ = cronLogger.Sync()

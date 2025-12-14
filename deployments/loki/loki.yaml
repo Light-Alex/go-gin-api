@@ -3,6 +3,15 @@ auth_enabled: false
 server:
   http_listen_port: 3100
 
+# 公共配置
+common:
+  # 环型存储配置
+  ring:
+    kvstore:
+      store: inmemory     # 存储后端，默认inmemory; 用于存储索引和日志数据
+  replication_factor: 1   # 副本因子，默认1; 用于复制索引和日志数据到其他节点
+  path_prefix: /loki      # 路径前缀，默认/loki; 用于区分不同的日志流
+
 ingester:
   lifecycler:
     address: 127.0.0.1
@@ -16,28 +25,26 @@ ingester:
 
 schema_config:
   configs:
-    - from: 2020-01-01
-      store: boltdb
-      object_store: filesystem
-      schema: v9
+    - from: 2020-10-24         # 从2020-10-24开始使用tsdb存储
+      store: tsdb              # 使用 Time Series Database (时序数据库) 作为索引存储
+      object_store: filesystem # 使用本地文件系统存储日志数据块
+      schema: v13              # 使用 v13 版本的存储架构
       index:
-        prefix: index_
-        period: 168h               # 每张表的时间范围6天
+        prefix: index_         # 索引文件的前缀名称
+        period: 24h            # 每24小时创建一个新的索引文件
 
+# 存储配置
 storage_config:
-  boltdb:
-    directory: /data/loki/index     # 索引文件存储地址
-
   filesystem:
-    directory: /data/loki/chunks    # 块存储地址
+    directory: /loki/data # 日志数据存储目录，默认/loki/data; 用于存储日志数据
 
 limits_config:
-  enforce_metric_name: false
+  # enforce_metric_name: false
   reject_old_samples: true
   reject_old_samples_max_age: 168h
 
-chunk_store_config:
-  max_look_back_period: 0s
+# chunk_store_config:
+#   max_look_back_period: 0s
 
 table_manager:
   retention_deletes_enabled: false

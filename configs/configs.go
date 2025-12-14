@@ -95,6 +95,7 @@ func init() {
 		r = bytes.NewReader(fatConfigs)
 	}
 
+	// 设置配置文件类型为 TOML
 	viper.SetConfigType("toml")
 
 	if err := viper.ReadConfig(r); err != nil {
@@ -126,6 +127,7 @@ func init() {
 		}
 	}
 
+	// 监听配置文件变化
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		if err := viper.Unmarshal(config); err != nil {

@@ -33,6 +33,7 @@ var metricsRequestsCost = prometheus.NewHistogramVec(
 )
 
 func init() {
+	// 注册指标
 	prometheus.MustRegister(metricsRequestsTotal, metricsRequestsCost)
 }
 
@@ -51,5 +52,5 @@ func RecordMetrics(method, path string, success bool, httpCode, businessCode int
 		"business_code":     cast.ToString(businessCode),
 		"cost_milliseconds": cast.ToString(costSeconds * 1000),
 		"trace_id":          traceId,
-	}).Observe(costSeconds)
+	}).Observe(costSeconds * 1000)
 }

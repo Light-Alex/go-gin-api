@@ -8,7 +8,6 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/authorized"
-	"github.com/xinliangnote/go-gin-api/pkg/env"
 	"github.com/xinliangnote/go-gin-api/pkg/errors"
 	"github.com/xinliangnote/go-gin-api/pkg/signature"
 	"github.com/xinliangnote/go-gin-api/pkg/urltable"
@@ -20,9 +19,9 @@ var whiteListPath = map[string]bool{
 
 func (i *interceptor) CheckSignature() core.HandlerFunc {
 	return func(c core.Context) {
-		if !env.Active().IsPro() {
-			return
-		}
+		// if !env.Active().IsPro() {
+		// 	return
+		// }
 
 		// 签名信息
 		authorization := c.GetHeader(configs.HeaderSignToken)

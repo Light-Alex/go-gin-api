@@ -112,6 +112,17 @@ func (h *handler) SearchMySQL() core.HandlerFunc {
 			return
 		}
 
+		// SQL 语句安全过滤机制，用于防止执行危险的数据库操作
+		// 黑名单敏感词 (filterListKeyword)：
+		// 数据操作类：insert, update, delete, truncate, replace
+		// 结构操作类：create, alter, rename, drop
+		// 权限管理类：grant, revoke
+		// 文件操作类：load_file, outfile, mysqldump
+		// 其他危险操作：sleep, transaction, commit, into
+
+		// 白名单关键词 (whiteListKeyword)：
+		// 系统字段：is_deleted, updated_at, created_at 等
+		// 特殊查询：show create table（表结构查询）
 		for _, f := range filterListKeyword {
 			if find := strings.Contains(sql, f); find {
 
@@ -156,16 +167,20 @@ func (h *handler) SearchMySQL() core.HandlerFunc {
 
 		var data []map[string]interface{}
 
+		// 从数据库查询结果集中逐行读取数据
 		for rows.Next() {
 			// Create a slice of interface{}'s to represent each column,
 			// and a second slice to contain pointers to each item in the columns slice.
+			// columns 切片用于存储每列的实际值
 			columns := make([]interface{}, len(cols))
+			// columnPointers 存储指向 columns 中每个元素的指针
 			columnPointers := make([]interface{}, len(cols))
 			for i := range columns {
 				columnPointers[i] = &columns[i]
 			}
 
 			// Scan the result into the column pointers...
+			// 将当前行的数据扫描到 columnPointers 指向的内存位置
 			if err := rows.Scan(columnPointers...); err != nil {
 				fmt.Printf("query table scan error, detail is [%v]\n", err.Error())
 				continue
@@ -173,12 +188,14 @@ func (h *handler) SearchMySQL() core.HandlerFunc {
 
 			// Create our map, and retrieve the value for each column from the pointers slice,
 			// storing it in the map with the name of the column as the key.
+			// 创建 map[string]interface{} 存储单行数据
 			m := make(map[string]interface{})
 			for i, colName := range cols {
 				val := columnPointers[i].(*interface{})
 				m[colName] = cast.ToString(*val)
 			}
 
+			// 将每行的 map 添加到结果切片中；data 变量最终包含所有行的数据
 			data = append(data, m)
 
 		}
@@ -186,6 +203,7 @@ func (h *handler) SearchMySQL() core.HandlerFunc {
 		res.List = data
 		res.Cols = cols
 
+		// 根据ORDINAL_POSITION（字段在表中的位置）升序排列
 		sqlTableColumn := fmt.Sprintf("SELECT `COLUMN_NAME`, `COLUMN_COMMENT` FROM `information_schema`.`columns` WHERE `table_schema`= '%s' AND `table_name`= '%s' ORDER BY `ORDINAL_POSITION` ASC",
 			req.DbName, req.TableName)
 
@@ -218,6 +236,18 @@ func (h *handler) SearchMySQL() core.HandlerFunc {
 
 		res.ColsInfo = tableColumns
 
+		// {
+		// 	 "cols": ["id", "name", "age"],
+		// 	 "cols_info": [
+		// 		 {"column_name": "id", "column_comment": "用户ID"},
+		// 		 {"column_name": "name", "column_comment": "用户姓名"},
+		// 		 {"column_name": "age", "column_comment": "用户年龄"}
+		// 	 ],
+		// 	 "list": [
+		// 	 	 {"id": "1", "name": "张三", "age": "25"},
+		// 		 {"id": "2", "name": "李四", "age": "30"}
+		// 	 ]
+		// }
 		c.Payload(res)
 	}
 }

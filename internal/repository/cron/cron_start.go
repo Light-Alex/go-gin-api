@@ -10,10 +10,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// Start 启动cron服务; 初始化所有定时任务
 func (s *server) Start() {
+	// 启动底层的定时任务调度器
 	s.cron.Start()
+	// 等待所有任务初始化完成
 	go s.taskCount.Wait()
 
+	// 数据库任务统计
 	qb := cron_task.NewQueryBuilder()
 	qb.WhereIsUsed(mysql.EqualPredicate, cron_task.IsUsedYES)
 	totalNum, err := qb.Count(s.db.GetDbR())
@@ -30,6 +34,8 @@ func (s *server) Start() {
 	for page := 1; page <= maxPage; page++ {
 		qb = cron_task.NewQueryBuilder()
 		qb.WhereIsUsed(mysql.EqualPredicate, cron_task.IsUsedYES)
+
+		// 分页查询任务列表
 		listData, err := qb.
 			Limit(pageSize).
 			Offset((page - 1) * pageSize).
@@ -39,6 +45,7 @@ func (s *server) Start() {
 			s.logger.Fatal("cron initialize tasks list err", zap.Error(err))
 		}
 
+		// 逐个添加任务到调度器
 		for _, item := range listData {
 			s.AddTask(item)
 			taskNum++

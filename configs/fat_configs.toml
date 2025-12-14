@@ -7,11 +7,11 @@
   local = "zh-cn"
 
 [mail]
-  host = "smtp.163.com"
-  pass = ""
+  host = "smtp.qq.com"
+  pass = "发件人邮箱授权码"
   port = 465
-  to = ""
-  user = ""
+  to = "目的邮箱地址（可多个，用,分割）"
+  user = "发件人邮箱地址（默认QQ邮箱地址）"
 
 [mysql]
 
@@ -23,13 +23,13 @@
   [mysql.read]
     addr = "127.0.0.1:3306"
     name = "go_gin_api"
-    pass = "123456789"
+    pass = "123456"
     user = "root"
 
   [mysql.write]
     addr = "127.0.0.1:3306"
     name = "go_gin_api"
-    pass = "123456789"
+    pass = "123456"
     user = "root"
 
 [redis]

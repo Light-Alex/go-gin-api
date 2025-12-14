@@ -24,8 +24,8 @@ type modifyPasswordResponse struct {
 // @Tags API.admin
 // @Accept application/x-www-form-urlencoded
 // @Produce json
-// @Param old_password formData string true "旧密码"
-// @Param new_password formData string true "新密码"
+// @Param old_password formData string true "旧密码(MD5后的密码)"
+// @Param new_password formData string true "新密码(MD5后的密码)"
 // @Success 200 {object} modifyPasswordResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/admin/modify_password [patch]

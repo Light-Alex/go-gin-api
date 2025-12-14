@@ -87,6 +87,7 @@ func (h *handler) List() core.HandlerFunc {
 		searchData.PageSize = pageSize
 		searchData.BusinessKey = req.BusinessKey
 		searchData.BusinessSecret = req.BusinessSecret
+		searchData.BusinessDeveloper = req.BusinessDeveloper
 		searchData.Remark = req.Remark
 
 		resListData, err := h.authorizedService.PageList(c, searchData)

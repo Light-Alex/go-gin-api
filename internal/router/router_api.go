@@ -7,6 +7,7 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/api/cron"
 	"github.com/xinliangnote/go-gin-api/internal/api/helper"
 	"github.com/xinliangnote/go-gin-api/internal/api/menu"
+	"github.com/xinliangnote/go-gin-api/internal/api/order"
 	"github.com/xinliangnote/go-gin-api/internal/api/tool"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 )
@@ -37,6 +38,11 @@ func setApiRouter(r *resource) {
 		notRBAC.PATCH("/admin/modify_password", adminHandler.ModifyPassword())
 		notRBAC.GET("/admin/info", adminHandler.Detail())
 		notRBAC.PATCH("/admin/modify_personal_info", adminHandler.ModifyPersonalInfo())
+
+		orderHandler := order.New(r.logger, r.db, r.cache)
+		notRBAC.POST("/order/create", orderHandler.Create())
+		notRBAC.POST("/order/cancel", orderHandler.Cancel())
+		notRBAC.GET("/order/:id", core.AliasForRecordMetrics("/api/order/info"), orderHandler.Detail())
 	}
 
 	// 需要签名验证、登录验证、RBAC 权限验证

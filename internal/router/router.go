@@ -16,12 +16,12 @@ import (
 )
 
 type resource struct {
-	mux          core.Mux
-	logger       *zap.Logger
-	db           mysql.Repo
-	cache        redis.Repo
-	interceptors interceptor.Interceptor
-	cronServer   cron.Server
+	mux          core.Mux                // HTTP 路由
+	logger       *zap.Logger             // HTTP 路由日志
+	db           mysql.Repo              // MySQL 数据库
+	cache        redis.Repo              // Redis 缓存
+	interceptors interceptor.Interceptor // HTTP 路由拦截器
+	cronServer   cron.Server             // CRON 任务服务器
 }
 
 type Server struct {
@@ -65,6 +65,7 @@ func NewHTTPServer(logger *zap.Logger, cronLogger *zap.Logger) (*Server, error) 
 		if err != nil {
 			logger.Fatal("new cron err", zap.Error(err))
 		}
+		// 初始化定时任务
 		cronServer.Start()
 		r.cronServer = cronServer
 	}
@@ -85,9 +86,11 @@ func NewHTTPServer(logger *zap.Logger, cronLogger *zap.Logger) (*Server, error) 
 	r.interceptors = interceptor.New(logger, r.cache, r.db)
 
 	// 设置 Render 路由
+	// 用途: 服务端渲染(SSR)页面，返回HTML内容
 	setRenderRouter(r)
 
 	// 设置 API 路由
+	// 用途: 提供RESTful API接口，用于客户端与服务端交互
 	setApiRouter(r)
 
 	// 设置 GraphQL 路由

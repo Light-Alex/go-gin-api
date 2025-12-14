@@ -8,10 +8,10 @@ import (
 
 var (
 	active Environment
-	dev    Environment = &environment{value: "dev"}
-	fat    Environment = &environment{value: "fat"}
-	uat    Environment = &environment{value: "uat"}
-	pro    Environment = &environment{value: "pro"}
+	dev    Environment = &environment{value: "dev"} // 开发环境
+	fat    Environment = &environment{value: "fat"} // 测试环境
+	uat    Environment = &environment{value: "uat"} // 预上线环境
+	pro    Environment = &environment{value: "pro"} // 正式环境
 )
 
 var _ Environment = (*environment)(nil)

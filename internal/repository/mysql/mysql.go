@@ -42,11 +42,13 @@ type dbRepo struct {
 
 func New() (Repo, error) {
 	cfg := configs.Get().MySQL
+	// 连接读库
 	dbr, err := dbConnect(cfg.Read.User, cfg.Read.Pass, cfg.Read.Addr, cfg.Read.Name)
 	if err != nil {
 		return nil, err
 	}
 
+	// 连接写库
 	dbw, err := dbConnect(cfg.Write.User, cfg.Write.Pass, cfg.Write.Addr, cfg.Write.Name)
 	if err != nil {
 		return nil, err
@@ -94,6 +96,7 @@ func dbConnect(user, pass, addr, dbName string) (*gorm.DB, error) {
 		"Local")
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		// 表名不使用复数
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},

@@ -82,7 +82,7 @@
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap-notify/notify.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        const ws = new WebSocket("ws://127.0.0.1:9999/socket/system/message");
+        const ws = new WebSocket("ws://192.168.140.128:9999/socket/system/message");
 
         //连接打开时触发
         ws.onopen = function (evt) {
@@ -91,6 +91,19 @@
                 $(".connect-content").html("Socket 连接成功");
                 $(".connect-url").html("连接地址：" + evt.currentTarget.url);
                 $(".connect-time").html(getCSTTime());
+
+                try {
+                    // 测试发送消息的功能
+                    ws.send(JSON.stringify({
+                    username: "test",
+                    message: "测试消息",
+                    time: new Date().toLocaleString()
+                    }));
+                    console.log("测试消息发送成功");
+                } catch (error) {
+                    console.error("发送消息失败:", error);
+                }
+
             } else {
                 $(".badge").addClass("badge-danger");
                 $(".connect-content").html("Socket 连接失败");

@@ -35,9 +35,9 @@ type Server interface {
 }
 
 var upGrader = websocket.Upgrader{
-	HandshakeTimeout: 5 * time.Second,
+	HandshakeTimeout: 5 * time.Second, // 握手超时时间
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		return true // 允许所有跨域请求
 	},
 }
 
@@ -54,6 +54,7 @@ func New(logger *zap.Logger, db mysql.Repo, cache redis.Repo, w http.ResponseWri
 		return nil, errors.New("cache required")
 	}
 
+	// 升级HTTP连接到Websocket协议
 	ws, err := upGrader.Upgrade(w, r, responseHeader)
 	if err != nil {
 		return nil, errors.Wrap(err, "ws error")
