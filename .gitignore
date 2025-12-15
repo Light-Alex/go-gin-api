@@ -17,3 +17,6 @@
 
 # Project runtime log
 logs/*.log
+
+# VsCode
+.vscode/
